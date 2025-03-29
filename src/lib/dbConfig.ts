@@ -1,23 +1,32 @@
-import mongoose from "mongoose";
-import dotenv from "dotenv";
+import { MongoClient } from "mongodb"
 
-dotenv.config();
+if (!process.env.MONGODB_URI) {
+  throw new Error('Invalid/Missing environment variable: "MONGODB_URI"')
+}
 
-const dbConnect = async () => {
-  try {
-    if (!process.env.MONGO_URI) {
-      throw new Error("MONGO_URI is not defined in the environment variables.");
-    }
+const uri = process.env.MONGODB_URI
+const options = {}
 
-    const conn = await mongoose.connect(process.env.MONGO_URI);
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
-  } catch (err) {
-    console.error("Database connection error:", err);
+let client
+let clientPromise: Promise<MongoClient>
 
-    throw new Error(
-      err instanceof Error ? err.message : "An unknown error occurred"
-    );
+if (process.env.NODE_ENV === "development") {
+  // In development mode, use a global variable so that the value
+  // is preserved across module reloads caused by HMR (Hot Module Replacement).
+  const globalWithMongo = global as typeof globalThis & {
+    _mongoClientPromise?: Promise<MongoClient>
   }
-};
 
-export default dbConnect;
+  if (!globalWithMongo._mongoClientPromise) {
+    client = new MongoClient(uri, options)
+    globalWithMongo._mongoClientPromise = client.connect()
+  }
+  clientPromise = globalWithMongo._mongoClientPromise
+} else {
+  // In production mode, it's best to not use a global variable.
+  client = new MongoClient(uri, options)
+  clientPromise = client.connect()
+}
+
+export default clientPromise
+
