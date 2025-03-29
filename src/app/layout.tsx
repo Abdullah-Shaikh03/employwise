@@ -8,8 +8,8 @@ import { AuthProvider } from "@/components/auth-provider";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "NextAuth MongoDB App",
-  description: "Next.js app with NextAuth and MongoDB",
+  title: "Employwise",
+  description: "Intership project",
 };
 
 export default function RootLayout({
